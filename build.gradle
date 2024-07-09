@@ -1,0 +1,74 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.1'
+    id 'io.spring.dependency-management' version '1.1.5'
+    id 'org.graalvm.buildtools.native' version '0.10.2' apply false
+}
+
+group = 'org.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+apply plugin: 'org.graalvm.buildtools.native'
+graalvmNative {
+    binaries {
+        main {
+            // Excluded graphical interface
+            buildArgs.add('-J-Djava.awt.headless=false')
+
+            // Liquibase uses http for resource loading
+            buildArgs.add('--enable-http')
+            buildArgs.add('--enable-https')
+
+            // https://github.com/micronaut-projects/micronaut-core/issues/1716
+            buildArgs.add('-H:+AddAllCharsets')
+
+            // https://stackoverflow.com/questions/72770461/graalvm-native-image-can-not-compile-logback-dependencies
+            buildArgs.add('--initialize-at-build-time=ch.qos.logback.classic.Logger,ch.qos.logback.core.CoreConstants,' +
+                    'ch.qos.logback.core.util.StatusPrinter,ch.qos.logback.core.util.StatusPrinter2,' +
+                    'ch.qos.logback.core.status.StatusBase,ch.qos.logback.core.util.Loader,' +
+                    'ch.qos.logback.classic.Level,org.slf4j.LoggerFactory,ch.qos.logback.core.status.InfoStatus,org.slf4j.MDC')
+
+            // To use lower memory on build phase, set max memory to 9GB: buildArgs.add('-J-Xmx9g')
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+    testCompileOnly 'org.projectlombok:lombok:1.18.34'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
+    // web
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    // security - oauth2 - authorization
+    implementation 'org.springframework.security:spring-security-oauth2-resource-server'
+    implementation 'org.springframework.security:spring-security-oauth2-jose'
+
+    // spring boot annotation processor. Must be set after lombok annotation processor
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
