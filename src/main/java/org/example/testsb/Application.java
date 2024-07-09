@@ -35,12 +35,14 @@ public class Application {
     }
 
     @Service
-    public static class PermissionEvaluatorTest {
+    public static class PermissionEvaluatorTest implements PermissionEvaluator {
 
+        @Override
         public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
             return false;
         }
 
+        @Override
         public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType, Object permission) {
             return false;
         }
@@ -59,22 +61,6 @@ public class Application {
         @Order(2)
         @RequiredArgsConstructor
         public static class OAuthSecurityConfig {
-            private final PermissionEvaluatorTest permissionEvaluatorTest;
-
-            @Bean
-            public PermissionEvaluator permissionEvaluator() {
-                return new PermissionEvaluator() {
-                    @Override
-                    public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
-                        return permissionEvaluatorTest.hasPermission(authentication, targetDomainObject, permission);
-                    }
-
-                    @Override
-                    public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType, Object permission) {
-                        return permissionEvaluatorTest.hasPermission(authentication, targetId, targetType, permission);
-                    }
-                };
-            }
 
             @Bean
             public AuthorizationEventPublisher authorizationEventPublisher(ApplicationEventPublisher publisher) {
